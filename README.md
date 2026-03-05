@@ -1,15 +1,33 @@
-# Social Network Backend
+﻿# Social Network Backend
 
-Backend API для социальной сети на Django + Django REST Framework.
+Backend API социальной сети на Django REST Framework.
 
-## Стек
+## Реализовано
+
+- Публикации (посты) с текстом и изображениями.
+- Несколько изображений к одному посту:
+  - основное изображение `image` (опционально);
+  - дополнительные изображения `uploaded_images` (список файлов).
+- Валидация: при создании поста должно быть хотя бы одно изображение (`image` или `uploaded_images`).
+- Комментарии к постам.
+- Лайки постов.
+- Токен-авторизация (DRF Token).
+- Геоданные поста:
+  - входное поле `location` (строка локации);
+  - сохранение `latitude`/`longitude` через `geopy.geocode()`;
+  - отображение `location_name` через `geopy.reverse()`.
+- Django Admin для управления моделями.
+
+## Технологии
 
 - Python 3.12+
 - Django 5.0.2
 - Django REST Framework 3.14.0
 - PostgreSQL
+- Pillow
+- geopy
 
-## Установка
+## Запуск проекта
 
 1. Создать и активировать виртуальное окружение:
 
@@ -24,7 +42,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-3. Настроить PostgreSQL в файле `social_network/settings.py` (`NAME`, `USER`, `PASSWORD`).
+3. Настроить подключение к PostgreSQL в [social_network/settings.py](social_network/settings.py).
 
 4. Применить миграции:
 
@@ -47,10 +65,31 @@ python manage.py runserver
 ## Полезные URL
 
 - Админка: `http://127.0.0.1:8000/admin/`
-- API posts: `http://127.0.0.1:8000/api/posts/`
-- Получение токена: `http://127.0.0.1:8000/api/token/`
+- Получение токена: `POST http://127.0.0.1:8000/api/token/`
+- Посты: `http://127.0.0.1:8000/api/posts/`
 
-## Основные API-эндпоинты
+## Авторизация
+
+Получить токен:
+
+```http
+POST /api/token/ HTTP/1.1
+Host: 127.0.0.1:8000
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin12345"
+}
+```
+
+Использовать токен в запросах:
+
+```http
+Authorization: Token <your_token>
+```
+
+## API эндпоинты
 
 - `GET/POST /api/posts/`
 - `GET/PATCH/DELETE /api/posts/<id>/`
@@ -58,16 +97,41 @@ python manage.py runserver
 - `GET/PATCH/DELETE /api/posts/<post_id>/comments/<id>/`
 - `POST/DELETE /api/posts/<post_id>/like/`
 
-## Дополнительные возможности
+## Пример создания поста с несколькими изображениями и геолокацией
 
-- Несколько фотографий к одной публикации через поле `uploaded_images`.
-- Геоданные публикации:
-  - при создании/обновлении можно передать `location`;
-  - координаты (`latitude`, `longitude`) сохраняются через `geocode()`;
-  - в ответе возвращается `location_name`, полученный через `reverse()`.
+Запрос `multipart/form-data`:
 
-Пример полей для `POST /api/posts/` (multipart/form-data):
-- `text`
-- `image` (основное изображение, опционально)
-- `uploaded_images` (несколько файлов)
-- `location` (строка, например `Moscow, Red Square`)
+- `text`: текст поста
+- `image`: основной файл (опционально)
+- `uploaded_images`: один или несколько файлов (можно передать ключ несколько раз)
+- `location`: строка локации, например `Moscow, Red Square`
+
+Пример `curl`:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/posts/ \
+  -H "Authorization: Token <your_token>" \
+  -F "text=Мой пост" \
+  -F "uploaded_images=@C:/path/photo1.jpg" \
+  -F "uploaded_images=@C:/path/photo2.jpg" \
+  -F "location=Moscow, Red Square"
+```
+
+## Медиа-файлы
+
+В режиме разработки медиа раздаются через `MEDIA_URL` при `DEBUG=True`.
+
+Проверка:
+
+- `http://127.0.0.1:8000/media/posts/<filename>`
+
+## Модели
+
+- `Post`
+- `PostImage`
+- `Comment`
+- `Like`
+
+## Примечания
+
+- `token_settings.md` содержит отдельную инструкцию по VK access token и не требуется для DRF-токена проекта.
