@@ -58,3 +58,16 @@ python manage.py runserver
 - `GET/PATCH/DELETE /api/posts/<post_id>/comments/<id>/`
 - `POST/DELETE /api/posts/<post_id>/like/`
 
+## Дополнительные возможности
+
+- Несколько фотографий к одной публикации через поле `uploaded_images`.
+- Геоданные публикации:
+  - при создании/обновлении можно передать `location`;
+  - координаты (`latitude`, `longitude`) сохраняются через `geocode()`;
+  - в ответе возвращается `location_name`, полученный через `reverse()`.
+
+Пример полей для `POST /api/posts/` (multipart/form-data):
+- `text`
+- `image` (основное изображение, опционально)
+- `uploaded_images` (несколько файлов)
+- `location` (строка, например `Moscow, Red Square`)

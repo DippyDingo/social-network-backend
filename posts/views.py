@@ -18,6 +18,7 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.select_related("author").prefetch_related(
         "comments__author",
+        "images",
         "likes",
     )
     serializer_class = PostSerializer
